@@ -1,0 +1,5 @@
+[console_scripts]
+telemetry_bridge = telemetry_system.telemetry_bridge:main
+telemetry_listener = telemetry_system.telemetry_listener:main
+telemetry_publisher = telemetry_system.telemetry_publisher:main
+

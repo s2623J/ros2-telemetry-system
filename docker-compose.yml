@@ -1,0 +1,40 @@
+services:
+  ros2_dev:
+    build: .
+    container_name: ros2_dev
+    volumes:
+      - ./ros2_ws:/workspace
+    working_dir: /workspace
+    ports:
+      - "5000:5000"
+    tty: true
+    command: >
+      bash -c '
+      source /opt/ros/humble/setup.bash &&
+      colcon build &&
+      source install/setup.bash &&
+      ros2 pkg executables telemetry_system &&
+      {
+        ros2 run telemetry_system telemetry_publisher &
+        sleep 2
+        ros2 run telemetry_system telemetry_bridge
+      }
+      '
+
+  telemetry_dashboard:
+    image: node:20
+    container_name: telemetry_dashboard
+    working_dir: /app
+    tty: true
+    environment:
+      - NG_CLI_ANALYTICS=false
+    volumes:
+      - ./telemetry-dashboard:/app
+      - /app/node_modules
+    ports:
+      - "4200:4200"
+    command: >
+      bash -c "
+      npm install &&
+      npm start -- --host 0.0.0.0 --poll 2000
+      "
