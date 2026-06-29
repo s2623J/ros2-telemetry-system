@@ -1,0 +1,47 @@
+<div class="container py-5">
+  <div class="mb-4">
+    <h1 class="display-5">ROS2 Telemetry Dashboard</h1>
+    <p class="text-muted">Live telemetry from ROS2 through Flask</p>
+  </div>
+
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="telemetry$ | async as data; else waiting">
+    <pre>{{ data | json }}</pre>
+
+    <div class="row g-4">
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Battery</h5>
+            <p class="display-6">{{ data.battery }}%</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">CPU Temperature</h5>
+            <p class="display-6">{{ data.cpu_temp }}°C</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="card shadow-sm">
+          <div class="card-body">
+            <h5 class="card-title">Uptime</h5>
+            <p class="display-6">{{ data.uptime }}s</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <ng-template #waiting>
+    <p class="text-muted">Waiting for telemetry...</p>
+  </ng-template>
+</div>

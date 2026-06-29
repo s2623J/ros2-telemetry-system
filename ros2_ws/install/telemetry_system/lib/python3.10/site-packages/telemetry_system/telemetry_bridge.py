@@ -4,11 +4,14 @@ import threading
 import rclpy
 
 from flask import Flask, jsonify
+from flask_cors import CORS
 from rclpy.node import Node
 from std_msgs.msg import String
 
 
 app = Flask(__name__)
+# CORS(app, origins=["http://localhost:4200"])
+CORS(app)
 
 latest_telemetry = {
     "message": "No telemetry yet"
