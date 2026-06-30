@@ -142,5 +142,23 @@ vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
 .vite/
 
+# ROS2 generated artifacts
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Angular generated artifacts
+telemetry-dashboard/node_modules/
+telemetry-dashboard/dist/
+.angular/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS/editor
+.DS_Store
+.vscode/
+
 # Notes to be made private
 Notes.txt
