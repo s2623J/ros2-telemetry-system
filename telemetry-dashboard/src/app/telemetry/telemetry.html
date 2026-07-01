@@ -1,40 +1,123 @@
 <div class="container py-5">
   <div class="mb-4">
     <h1 class="display-5">ROS2 Telemetry Dashboard</h1>
-    <p class="text-muted">Live telemetry from ROS2 through Flask</p>
+    <p class="text-muted">
+      Live telemetry from ROS2 through Flask.
+    </p>
   </div>
 
   <div *ngIf="errorMessage" class="alert alert-danger">
     {{ errorMessage }}
   </div>
 
-  <div *ngIf="telemetry$ | async as data; else waiting">
-    <pre>{{ data | json }}</pre>
+  <div *ngIf="telemetryView$ | async as vm; else waiting">
+    <div *ngIf="vm.current as data; else waiting">
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">Battery</h5>
+              <p class="display-6">{{ data.battery }}%</p>
+            </div>
+          </div>
+        </div>
 
-    <div class="row g-4">
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">Battery</h5>
-            <p class="display-6">{{ data.battery }}%</p>
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">CPU Temperature</h5>
+              <p class="display-6">{{ data.cpu_temp }}°C</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">Uptime</h5>
+              <p class="display-6">{{ data.uptime }}s</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <div class="card shadow-sm h-100">
+            <div class="card-body">
+              <h5 class="card-title">Health</h5>
+              <p
+                class="display-6"
+                [class.text-success]="data.healthStatus === 'OK'"
+                [class.text-warning]="data.healthStatus === 'WARN'"
+              >
+                {{ data.healthStatus }}
+              </p>
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">CPU Temperature</h5>
-            <p class="display-6">{{ data.cpu_temp }}°C</p>
+      <div class="card shadow-sm mb-4">
+        <div class="card-body">
+          <h5 class="card-title">Telemetry Summary</h5>
+
+          <div class="row">
+            <div class="col-md-3">
+              <strong>Samples:</strong>
+              {{ vm.sampleCount }}
+            </div>
+
+            <div class="col-md-3">
+              <strong>Avg Battery:</strong>
+              {{ vm.averageBattery }}%
+            </div>
+
+            <div class="col-md-3">
+              <strong>Max CPU Temp:</strong>
+              {{ vm.maxCpuTemp }}°C
+            </div>
+
+            <div class="col-md-3">
+              <strong>Last Updated:</strong>
+              {{ data.receivedAt | date: 'mediumTime' }}
+            </div>
           </div>
         </div>
       </div>
 
-      <div class="col-md-4">
-        <div class="card shadow-sm">
-          <div class="card-body">
-            <h5 class="card-title">Uptime</h5>
-            <p class="display-6">{{ data.uptime }}s</p>
+      <div class="card shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title">Telemetry History</h5>
+
+          <div class="table-responsive">
+            <table class="table table-striped align-middle">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Battery</th>
+                  <th>CPU Temp</th>
+                  <th>Uptime</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+
+              <tbody>
+                <tr *ngFor="let sample of vm.history">
+                  <td>{{ sample.receivedAt | date: 'mediumTime' }}</td>
+                  <td>{{ sample.battery }}%</td>
+                  <td>{{ sample.cpu_temp }}°C</td>
+                  <td>{{ sample.uptime }}s</td>
+                  <td>
+                    <span
+                      class="badge"
+                      [class.bg-success]="sample.healthStatus === 'OK'"
+                      [class.bg-warning]="sample.healthStatus === 'WARN'"
+                    >
+                      {{ sample.healthStatus }}
+                    </span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
@@ -42,6 +125,8 @@
   </div>
 
   <ng-template #waiting>
-    <p class="text-muted">Waiting for telemetry...</p>
+    <div class="alert alert-secondary">
+      Waiting for telemetry...
+    </div>
   </ng-template>
 </div>
