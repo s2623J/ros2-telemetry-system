@@ -12,8 +12,6 @@ RUN apt-get update && apt-get install -y \
     ca-certificates \
     gnupg
 
-RUN python3 -m pip install flask-cors
-
 WORKDIR /workspace
 
 CMD ["bash"]
