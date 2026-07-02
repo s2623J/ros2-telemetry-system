@@ -1,17 +1,7 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpClient } from '@angular/common/http';
-import {
-  Observable,
-  of,
-  timer,
-  catchError,
-  map,
-  scan,
-  shareReplay,
-  switchMap,
-  tap,
-} from 'rxjs';
+import { Observable, of, timer, catchError, map, scan, shareReplay, switchMap, tap } from 'rxjs';
 
 interface Telemetry {
   battery: number;
@@ -19,9 +9,17 @@ interface Telemetry {
   uptime: number;
 }
 
+type HealthStatus = 'OK' | 'WARN' | 'CRITICAL';
+
+interface TelemetryAnomaly {
+  severity: 'WARN' | 'CRITICAL';
+  message: string;
+}
+
 interface TelemetrySample extends Telemetry {
   receivedAt: Date;
-  healthStatus: 'OK' | 'WARN';
+  healthStatus: HealthStatus;
+  anomalies: TelemetryAnomaly[];
 }
 
 interface TelemetryViewModel {
@@ -30,6 +28,9 @@ interface TelemetryViewModel {
   sampleCount: number;
   averageBattery: number | null;
   maxCpuTemp: number | null;
+  okCount: number;
+  warnCount: number;
+  criticalCount: number;
 }
 
 @Component({
@@ -44,6 +45,12 @@ export class TelemetryComponent {
 
   telemetryView$: Observable<TelemetryViewModel>;
 
+  private readonly lowBatteryThreshold = 25;
+  private readonly criticalBatteryThreshold = 10;
+  private readonly warningCpuTempThreshold = 75;
+  private readonly criticalCpuTempThreshold = 85;
+  private readonly maxHistoryLength = 20;
+
   constructor(private http: HttpClient) {
     this.telemetryView$ = timer(0, 2000).pipe(
       switchMap(() =>
@@ -57,8 +64,8 @@ export class TelemetryComponent {
             console.error('Telemetry fetch failed:', error);
             this.errorMessage = 'Unable to contact telemetry server.';
             return of(null);
-          })
-        )
+          }),
+        ),
       ),
 
       scan((history: TelemetrySample[], sample: TelemetrySample | null) => {
@@ -66,32 +73,77 @@ export class TelemetryComponent {
           return history;
         }
 
-        return [sample, ...history].slice(0, 20);
-      }, []),
+        return [sample, ...history].slice(0, this.maxHistoryLength);
+      }, [] as TelemetrySample[]),
 
       map((history) => this.toViewModel(history)),
 
       shareReplay({
         bufferSize: 1,
         refCount: true,
-      })
+      }),
     );
   }
 
   private toTelemetrySample(telemetry: Telemetry): TelemetrySample {
+    const anomalies = this.detectAnomalies(telemetry);
+    const healthStatus = this.getHealthStatus(anomalies);
+
     return {
       ...telemetry,
       receivedAt: new Date(),
-      healthStatus: this.getHealthStatus(telemetry),
+      healthStatus,
+      anomalies,
     };
   }
 
-  private getHealthStatus(telemetry: Telemetry): 'OK' | 'WARN' {
-    if (telemetry.battery < 25) {
-      return 'WARN';
+  private detectAnomalies(telemetry: Telemetry): TelemetryAnomaly[] {
+    const anomalies: TelemetryAnomaly[] = [];
+
+    if (telemetry.battery <= this.criticalBatteryThreshold) {
+      anomalies.push({
+        severity: 'CRITICAL',
+        message: `Battery is critically low at ${telemetry.battery}%`,
+      });
+    } else if (telemetry.battery < this.lowBatteryThreshold) {
+      anomalies.push({
+        severity: 'WARN',
+        message: `Battery is below ${this.lowBatteryThreshold}%`,
+      });
     }
 
-    if (telemetry.cpu_temp > 75) {
+    if (telemetry.cpu_temp >= this.criticalCpuTempThreshold) {
+      anomalies.push({
+        severity: 'CRITICAL',
+        message: `CPU temperature is critically high at ${telemetry.cpu_temp}°C`,
+      });
+    } else if (telemetry.cpu_temp > this.warningCpuTempThreshold) {
+      anomalies.push({
+        severity: 'WARN',
+        message: `CPU temperature is above ${this.warningCpuTempThreshold}°C`,
+      });
+    }
+
+    if (telemetry.uptime < 0) {
+      anomalies.push({
+        severity: 'CRITICAL',
+        message: 'Uptime is invalid',
+      });
+    }
+
+    return anomalies;
+  }
+
+  private getHealthStatus(anomalies: TelemetryAnomaly[]): HealthStatus {
+    const hasCritical = anomalies.some((anomaly) => anomaly.severity === 'CRITICAL');
+
+    if (hasCritical) {
+      return 'CRITICAL';
+    }
+
+    const hasWarning = anomalies.some((anomaly) => anomaly.severity === 'WARN');
+
+    if (hasWarning) {
       return 'WARN';
     }
 
@@ -108,17 +160,21 @@ export class TelemetryComponent {
         sampleCount: 0,
         averageBattery: null,
         maxCpuTemp: null,
+        okCount: 0,
+        warnCount: 0,
+        criticalCount: 0,
       };
     }
 
-    const totalBattery = history.reduce(
-      (sum, sample) => sum + sample.battery,
-      0
-    );
+    const totalBattery = history.reduce((sum, sample) => sum + sample.battery, 0);
 
-    const maxCpuTemp = Math.max(
-      ...history.map((sample) => sample.cpu_temp)
-    );
+    const maxCpuTemp = Math.max(...history.map((sample) => sample.cpu_temp));
+
+    const okCount = history.filter((sample) => sample.healthStatus === 'OK').length;
+
+    const warnCount = history.filter((sample) => sample.healthStatus === 'WARN').length;
+
+    const criticalCount = history.filter((sample) => sample.healthStatus === 'CRITICAL').length;
 
     return {
       current,
@@ -126,6 +182,9 @@ export class TelemetryComponent {
       sampleCount: history.length,
       averageBattery: Math.round(totalBattery / history.length),
       maxCpuTemp,
+      okCount,
+      warnCount,
+      criticalCount,
     };
   }
 }

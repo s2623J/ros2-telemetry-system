@@ -2,7 +2,7 @@
   <div class="mb-4">
     <h1 class="display-5">ROS2 Telemetry Dashboard</h1>
     <p class="text-muted">
-      Live telemetry from ROS2 through Flask.
+      Live telemetry from ROS2 through Flask with rule-based anomaly detection.
     </p>
   </div>
 
@@ -12,6 +12,25 @@
 
   <div *ngIf="telemetryView$ | async as vm; else waiting">
     <div *ngIf="vm.current as data; else waiting">
+      <div
+        class="alert"
+        [class.alert-success]="data.healthStatus === 'OK'"
+        [class.alert-warning]="data.healthStatus === 'WARN'"
+        [class.alert-danger]="data.healthStatus === 'CRITICAL'"
+      >
+        <strong>System Health:</strong> {{ data.healthStatus }}
+
+        <div *ngIf="data.anomalies.length > 0" class="mt-2">
+          <div *ngFor="let anomaly of data.anomalies">
+            {{ anomaly.message }}
+          </div>
+        </div>
+
+        <div *ngIf="data.anomalies.length === 0" class="mt-2">
+          No anomalies detected.
+        </div>
+      </div>
+
       <div class="row g-4 mb-4">
         <div class="col-md-3">
           <div class="card shadow-sm h-100">
@@ -48,6 +67,7 @@
                 class="display-6"
                 [class.text-success]="data.healthStatus === 'OK'"
                 [class.text-warning]="data.healthStatus === 'WARN'"
+                [class.text-danger]="data.healthStatus === 'CRITICAL'"
               >
                 {{ data.healthStatus }}
               </p>
@@ -60,26 +80,40 @@
         <div class="card-body">
           <h5 class="card-title">Telemetry Summary</h5>
 
-          <div class="row">
-            <div class="col-md-3">
+          <div class="row g-3">
+            <div class="col-md-2">
               <strong>Samples:</strong>
               {{ vm.sampleCount }}
             </div>
 
-            <div class="col-md-3">
+            <div class="col-md-2">
               <strong>Avg Battery:</strong>
               {{ vm.averageBattery }}%
             </div>
 
-            <div class="col-md-3">
-              <strong>Max CPU Temp:</strong>
+            <div class="col-md-2">
+              <strong>Max CPU:</strong>
               {{ vm.maxCpuTemp }}°C
             </div>
 
-            <div class="col-md-3">
-              <strong>Last Updated:</strong>
-              {{ data.receivedAt | date: 'mediumTime' }}
+            <div class="col-md-2">
+              <strong>OK:</strong>
+              {{ vm.okCount }}
             </div>
+
+            <div class="col-md-2">
+              <strong>WARN:</strong>
+              {{ vm.warnCount }}
+            </div>
+
+            <div class="col-md-2">
+              <strong>CRITICAL:</strong>
+              {{ vm.criticalCount }}
+            </div>
+          </div>
+
+          <div class="mt-3 text-muted">
+            Last updated: {{ data.receivedAt | date: 'mediumTime' }}
           </div>
         </div>
       </div>
@@ -97,6 +131,7 @@
                   <th>CPU Temp</th>
                   <th>Uptime</th>
                   <th>Status</th>
+                  <th>Anomalies</th>
                 </tr>
               </thead>
 
@@ -111,9 +146,21 @@
                       class="badge"
                       [class.bg-success]="sample.healthStatus === 'OK'"
                       [class.bg-warning]="sample.healthStatus === 'WARN'"
+                      [class.bg-danger]="sample.healthStatus === 'CRITICAL'"
                     >
                       {{ sample.healthStatus }}
                     </span>
+                  </td>
+                  <td>
+                    <span *ngIf="sample.anomalies.length === 0">
+                      None
+                    </span>
+
+                    <ul *ngIf="sample.anomalies.length > 0" class="mb-0">
+                      <li *ngFor="let anomaly of sample.anomalies">
+                        {{ anomaly.message }}
+                      </li>
+                    </ul>
                   </td>
                 </tr>
               </tbody>
