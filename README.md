@@ -1,8 +1,8 @@
-# ROS2 Telemetry System
+# ROS2 Robot Health Monitoring Dashboard
 
-A containerized ROS2 telemetry monitoring system that publishes simulated robot health data, bridges ROS2 telemetry to a Flask HTTP API, and displays live telemetry in an Angular dashboard.
+A containerized ROS2 telemetry monitoring system that publishes simulated robot health data, bridges ROS2 telemetry to a Flask HTTP API, and displays live telemetry in an Angular dashboard. 
 
-This project demonstrates a distributed robotics software architecture using ROS2, Python, Flask, Docker Compose, and Angular.
+This project demonstrates a distributed robotics software architecture using ROS2 Humble, Python, Flask, Angular, RxJS, Bootstrap, and Docker Compose. Implemented ROS2 publisher/subscriber nodes, a Flask bridge API, live dashboard telemetry updates, telemetry history tracking, and rule-based anomaly detection for robot health monitoring.
 
 ---
 
