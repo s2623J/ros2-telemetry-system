@@ -31,6 +31,14 @@ interface TelemetryViewModel {
   okCount: number;
   warnCount: number;
   criticalCount: number;
+  healthSummary: HealthSummary;
+}
+
+interface HealthSummary {
+  title: string;
+  message: string;
+  recommendation: string;
+  riskLevel: HealthStatus;
 }
 
 @Component({
@@ -163,6 +171,12 @@ export class TelemetryComponent {
         okCount: 0,
         warnCount: 0,
         criticalCount: 0,
+        healthSummary: {
+          title: 'Waiting for telemetry',
+          message: 'No telemetry samples have been received yet.',
+          recommendation: 'Verify that the ROS2 publisher and Flask bridge are running.',
+          riskLevel: 'OK',
+        },
       };
     }
 
@@ -185,6 +199,85 @@ export class TelemetryComponent {
       okCount,
       warnCount,
       criticalCount,
+      healthSummary: this.generateHealthSummary(history),
+    };
+  }
+
+  private generateHealthSummary(history: TelemetrySample[]): HealthSummary {
+    const current = history[0];
+
+    const recentCriticalCount = history.filter(
+      (sample) => sample.healthStatus === 'CRITICAL',
+    ).length;
+
+    const recentWarnCount = history.filter((sample) => sample.healthStatus === 'WARN').length;
+
+    const cpuWarnings = history.filter((sample) =>
+      sample.anomalies.some((anomaly) => anomaly.message.toLowerCase().includes('cpu')),
+    ).length;
+
+    const batteryWarnings = history.filter((sample) =>
+      sample.anomalies.some((anomaly) => anomaly.message.toLowerCase().includes('battery')),
+    ).length;
+
+    if (current.healthStatus === 'CRITICAL') {
+      return {
+        title: 'Critical telemetry condition detected',
+        message:
+          'The robot telemetry indicates a critical health condition in the recent monitoring window.',
+        recommendation:
+          'Pause operation and inspect the system immediately. Check battery state, CPU temperature, and recent anomaly messages.',
+        riskLevel: 'CRITICAL',
+      };
+    }
+
+    if (recentCriticalCount > 0) {
+      return {
+        title: 'Recent critical event detected',
+        message:
+          'The current telemetry is not critical, but at least one recent sample reported a critical condition.',
+        recommendation:
+          'Continue monitoring closely and inspect the telemetry history for repeated critical events.',
+        riskLevel: 'WARN',
+      };
+    }
+
+    if (current.healthStatus === 'WARN' || recentWarnCount > 0) {
+      if (cpuWarnings > batteryWarnings) {
+        return {
+          title: 'Thermal warning pattern detected',
+          message:
+            'CPU temperature has exceeded the warning threshold in recent telemetry samples.',
+          recommendation:
+            'Monitor CPU temperature trends and consider reducing workload or checking cooling behavior.',
+          riskLevel: 'WARN',
+        };
+      }
+
+      if (batteryWarnings > cpuWarnings) {
+        return {
+          title: 'Battery warning pattern detected',
+          message: 'Battery level has entered a warning range in recent telemetry samples.',
+          recommendation: 'Prepare for charging, shutdown, or reduced-power operation.',
+          riskLevel: 'WARN',
+        };
+      }
+
+      return {
+        title: 'Telemetry warning detected',
+        message:
+          'One or more telemetry values have entered a warning range in the recent monitoring window.',
+        recommendation: 'Review the anomaly list and continue monitoring for repeated warnings.',
+        riskLevel: 'WARN',
+      };
+    }
+
+    return {
+      title: 'System operating normally',
+      message:
+        'No anomalies were detected in the recent telemetry window. Battery and CPU temperature appear to be within expected operating ranges.',
+      recommendation: 'Continue normal operation and monitoring.',
+      riskLevel: 'OK',
     };
   }
 }

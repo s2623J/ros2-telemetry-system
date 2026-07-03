@@ -1,179 +1,194 @@
 <div class="container py-5">
-  <div class="mb-4">
-    <h1 class="display-5">ROS2 Telemetry Dashboard</h1>
-    <p class="text-muted">
-      Live telemetry from ROS2 through Flask with rule-based anomaly detection.
-    </p>
-  </div>
+    <div class="mb-4">
+        <h1 class="display-5">ROS2 Telemetry Dashboard</h1>
+        <p class="text-muted">
+            Live telemetry from ROS2 through Flask with rule-based anomaly detection.
+        </p>
+    </div>
 
-  <div *ngIf="errorMessage" class="alert alert-danger">
-    {{ errorMessage }}
-  </div>
+    <div *ngIf="errorMessage" class="alert alert-danger">
+        {{ errorMessage }}
+    </div>
 
-  <div *ngIf="telemetryView$ | async as vm; else waiting">
-    <div *ngIf="vm.current as data; else waiting">
-      <div
-        class="alert"
-        [class.alert-success]="data.healthStatus === 'OK'"
-        [class.alert-warning]="data.healthStatus === 'WARN'"
-        [class.alert-danger]="data.healthStatus === 'CRITICAL'"
-      >
-        <strong>System Health:</strong> {{ data.healthStatus }}
+    <div *ngIf="telemetryView$ | async as vm; else waiting">
+        <div *ngIf="vm.current as data; else waiting">
+            <div class="alert" [class.alert-success]="data.healthStatus === 'OK'"
+                [class.alert-warning]="data.healthStatus === 'WARN'"
+                [class.alert-danger]="data.healthStatus === 'CRITICAL'">
+                <strong>System Health:</strong> {{ data.healthStatus }}
 
-        <div *ngIf="data.anomalies.length > 0" class="mt-2">
-          <div *ngFor="let anomaly of data.anomalies">
-            {{ anomaly.message }}
-          </div>
-        </div>
-
-        <div *ngIf="data.anomalies.length === 0" class="mt-2">
-          No anomalies detected.
-        </div>
-      </div>
-
-      <div class="row g-4 mb-4">
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100">
-            <div class="card-body">
-              <h5 class="card-title">Battery</h5>
-              <p class="display-6">{{ data.battery }}%</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100">
-            <div class="card-body">
-              <h5 class="card-title">CPU Temperature</h5>
-              <p class="display-6">{{ data.cpu_temp }}°C</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100">
-            <div class="card-body">
-              <h5 class="card-title">Uptime</h5>
-              <p class="display-6">{{ data.uptime }}s</p>
-            </div>
-          </div>
-        </div>
-
-        <div class="col-md-3">
-          <div class="card shadow-sm h-100">
-            <div class="card-body">
-              <h5 class="card-title">Health</h5>
-              <p
-                class="display-6"
-                [class.text-success]="data.healthStatus === 'OK'"
-                [class.text-warning]="data.healthStatus === 'WARN'"
-                [class.text-danger]="data.healthStatus === 'CRITICAL'"
-              >
-                {{ data.healthStatus }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div class="card shadow-sm mb-4">
-        <div class="card-body">
-          <h5 class="card-title">Telemetry Summary</h5>
-
-          <div class="row g-3">
-            <div class="col-md-2">
-              <strong>Samples:</strong>
-              {{ vm.sampleCount }}
-            </div>
-
-            <div class="col-md-2">
-              <strong>Avg Battery:</strong>
-              {{ vm.averageBattery }}%
-            </div>
-
-            <div class="col-md-2">
-              <strong>Max CPU:</strong>
-              {{ vm.maxCpuTemp }}°C
-            </div>
-
-            <div class="col-md-2">
-              <strong>OK:</strong>
-              {{ vm.okCount }}
-            </div>
-
-            <div class="col-md-2">
-              <strong>WARN:</strong>
-              {{ vm.warnCount }}
-            </div>
-
-            <div class="col-md-2">
-              <strong>CRITICAL:</strong>
-              {{ vm.criticalCount }}
-            </div>
-          </div>
-
-          <div class="mt-3 text-muted">
-            Last updated: {{ data.receivedAt | date: 'mediumTime' }}
-          </div>
-        </div>
-      </div>
-
-      <div class="card shadow-sm">
-        <div class="card-body">
-          <h5 class="card-title">Telemetry History</h5>
-
-          <div class="table-responsive">
-            <table class="table table-striped align-middle">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Battery</th>
-                  <th>CPU Temp</th>
-                  <th>Uptime</th>
-                  <th>Status</th>
-                  <th>Anomalies</th>
-                </tr>
-              </thead>
-
-              <tbody>
-                <tr *ngFor="let sample of vm.history">
-                  <td>{{ sample.receivedAt | date: 'mediumTime' }}</td>
-                  <td>{{ sample.battery }}%</td>
-                  <td>{{ sample.cpu_temp }}°C</td>
-                  <td>{{ sample.uptime }}s</td>
-                  <td>
-                    <span
-                      class="badge"
-                      [class.bg-success]="sample.healthStatus === 'OK'"
-                      [class.bg-warning]="sample.healthStatus === 'WARN'"
-                      [class.bg-danger]="sample.healthStatus === 'CRITICAL'"
-                    >
-                      {{ sample.healthStatus }}
-                    </span>
-                  </td>
-                  <td>
-                    <span *ngIf="sample.anomalies.length === 0">
-                      None
-                    </span>
-
-                    <ul *ngIf="sample.anomalies.length > 0" class="mb-0">
-                      <li *ngFor="let anomaly of sample.anomalies">
+                <div *ngIf="data.anomalies.length > 0" class="mt-2">
+                    <div *ngFor="let anomaly of data.anomalies">
                         {{ anomaly.message }}
-                      </li>
-                    </ul>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
+                    </div>
+                </div>
 
-  <ng-template #waiting>
-    <div class="alert alert-secondary">
-      Waiting for telemetry...
+                <div *ngIf="data.anomalies.length === 0" class="mt-2">
+                    No anomalies detected.
+                </div>
+            </div>
+
+            <div class="row g-4 mb-4">
+                <div class="col-md-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Battery</h5>
+                            <p class="display-6">{{ data.battery }}%</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">CPU Temperature</h5>
+                            <p class="display-6">{{ data.cpu_temp }}°C</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Uptime</h5>
+                            <p class="display-6">{{ data.uptime }}s</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-3">
+                    <div class="card shadow-sm h-100">
+                        <div class="card-body">
+                            <h5 class="card-title">Health</h5>
+                            <p class="display-6" [class.text-success]="data.healthStatus === 'OK'"
+                                [class.text-warning]="data.healthStatus === 'WARN'"
+                                [class.text-danger]="data.healthStatus === 'CRITICAL'">
+                                {{ data.healthStatus }}
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <h5 class="card-title">Telemetry Summary</h5>
+
+                    <div class="row g-3">
+                        <div class="col-md-2">
+                            <strong>Samples:</strong>
+                            {{ vm.sampleCount }}
+                        </div>
+
+                        <div class="col-md-2">
+                            <strong>Avg Battery:</strong>
+                            {{ vm.averageBattery }}%
+                        </div>
+
+                        <div class="col-md-2">
+                            <strong>Max CPU:</strong>
+                            {{ vm.maxCpuTemp }}°C
+                        </div>
+
+                        <div class="col-md-2">
+                            <strong>OK:</strong>
+                            {{ vm.okCount }}
+                        </div>
+
+                        <div class="col-md-2">
+                            <strong>WARN:</strong>
+                            {{ vm.warnCount }}
+                        </div>
+
+                        <div class="col-md-2">
+                            <strong>CRITICAL:</strong>
+                            {{ vm.criticalCount }}
+                        </div>
+                    </div>
+
+                    <div class="mt-3 text-muted">
+                        Last updated: {{ data.receivedAt | date: 'mediumTime' }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm">
+                <div class="card-body">
+                    <h5 class="card-title">Telemetry History</h5>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped align-middle">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Battery</th>
+                                    <th>CPU Temp</th>
+                                    <th>Uptime</th>
+                                    <th>Status</th>
+                                    <th>Anomalies</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                <tr *ngFor="let sample of vm.history">
+                                    <td>{{ sample.receivedAt | date: 'mediumTime' }}</td>
+                                    <td>{{ sample.battery }}%</td>
+                                    <td>{{ sample.cpu_temp }}°C</td>
+                                    <td>{{ sample.uptime }}s</td>
+                                    <td>
+                                        <span class="badge" [class.bg-success]="sample.healthStatus === 'OK'"
+                                            [class.bg-warning]="sample.healthStatus === 'WARN'"
+                                            [class.bg-danger]="sample.healthStatus === 'CRITICAL'">
+                                            {{ sample.healthStatus }}
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span *ngIf="sample.anomalies.length === 0">
+                                            None
+                                        </span>
+
+                                        <ul *ngIf="sample.anomalies.length > 0" class="mb-0">
+                                            <li *ngFor="let anomaly of sample.anomalies">
+                                                {{ anomaly.message }}
+                                            </li>
+                                        </ul>
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card shadow-sm mb-4 border-start border-4 healthSum "
+                [class.border-success]="vm.healthSummary.riskLevel === 'OK'"
+                [class.border-warning]="vm.healthSummary.riskLevel === 'WARN'"
+                [class.border-danger]="vm.healthSummary.riskLevel === 'CRITICAL'">
+                <div class="card-body">
+                    <h5 class="card-title">AI Health Summary</h5>
+
+                    <h6 [class.text-success]="vm.healthSummary.riskLevel === 'OK'"
+                        [class.text-warning]="vm.healthSummary.riskLevel === 'WARN'"
+                        [class.text-danger]="vm.healthSummary.riskLevel === 'CRITICAL'">
+                        {{ vm.healthSummary.title }}
+                    </h6>
+
+                    <p class="mb-2">
+                        {{ vm.healthSummary.message }}
+                    </p>
+
+                    <p class="mb-0">
+                        <strong>Recommendation:</strong>
+                        {{ vm.healthSummary.recommendation }}
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
-  </ng-template>
+
+    <ng-template #waiting>
+        <div class="alert alert-secondary">
+            Waiting for telemetry...
+        </div>
+    </ng-template>
 </div>
