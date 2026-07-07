@@ -4,7 +4,9 @@ A containerized ROS2 telemetry monitoring system that publishes simulated robot 
 
 This project demonstrates a distributed robotics software architecture using ROS2 Humble, Python, Flask, Angular, RxJS, Bootstrap, and Docker Compose. Implemented ROS2 publisher/subscriber nodes, a Flask bridge API, live dashboard telemetry updates, telemetry history tracking, and rule-based anomaly detection for robot health monitoring.
 
----
+
+![ROS2 telemetry dashboard](docs/screenshots/dashboard-running.png)
+
 
 ## Project Overview
 
