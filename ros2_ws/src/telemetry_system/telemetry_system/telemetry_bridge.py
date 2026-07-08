@@ -10,8 +10,7 @@ from std_msgs.msg import String
 
 
 app = Flask(__name__)
-# CORS(app, origins=["http://localhost:4200"])
-CORS(app)
+CORS(app, origins=["http://localhost:4200"])
 
 latest_telemetry = {
     "message": "No telemetry yet"
