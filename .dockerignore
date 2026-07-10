@@ -1,0 +1,41 @@
+# Git
+.git
+.gitignore
+
+# ROS 2 generated directories
+ros2_ws/build/
+ros2_ws/install/
+ros2_ws/log/
+
+# Angular generated dependencies and output
+telemetry-dashboard/node_modules/
+telemetry-dashboard/dist/
+telemetry-dashboard/.angular/
+
+# Python generated files
+__pycache__/
+*.pyc
+*.pyo
+
+# Editor files
+.vscode/
+.idea/
+
+# Operating-system files
+.DS_Store
+Thumbs.db
+
+# Logs and temporary files
+*.log
+*.tmp
+*.swp
+
+# Local environment and secrets
+.env
+.env.*
+*.pem
+*.key
+secrets/
+
+# Project-specific notes not required in the image
+Notes.txt
