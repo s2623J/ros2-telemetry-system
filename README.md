@@ -460,7 +460,6 @@ Implemented:
 
 ### Dashboard Improvements
 
-* Add telemetry history.
 * Add line charts for battery and CPU temperature.
 * Add connection status indicator.
 * Add last-updated timestamp.
